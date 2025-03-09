@@ -1,0 +1,21 @@
+e-shop-front/
+├── public/
+├── src/
+│   ├── api/                 # API 接口
+│   ├── assets/              # 静态资源
+│   ├── components/          # 公共组件
+│   ├── composables/         # 组合式函数
+│   ├── i18n/               # 国际化文件
+│   ├── layouts/            # 布局组件
+│   ├── router/             # 路由配置
+│   ├── stores/             # Pinia 状态管理
+│   ├── styles/             # 全局样式
+│   ├── utils/              # 工具函数
+│   ├── views/              # 页面组件
+│   ├── App.vue
+│   └── main.ts
+├── .env                    # 环境变量
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts 
