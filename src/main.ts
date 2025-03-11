@@ -2,29 +2,21 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import "./styles/main.css";
+import "@/styles/index.scss";
 import App from "./App.vue";
 import router from "./router";
-import { createI18n } from "vue-i18n";
-import zhCN from "@/locales/zh-CN";
-import enUS from "@/locales/en-US";
+import i18n from "./i18n";
+
+// 开发环境下引入mock服务
+if (import.meta.env.DEV) {
+  await import("./mock");
+}
 
 // 创建 Vue 应用实例
 const app = createApp(App);
 
 // 创建 Pinia 实例
 const pinia = createPinia();
-
-// 创建 i18n 实例
-const i18n = createI18n({
-  legacy: false,
-  locale: localStorage.getItem("locale") || "zh-CN",
-  fallbackLocale: "zh-CN",
-  messages: {
-    "zh-CN": zhCN,
-    "en-US": enUS,
-  },
-});
 
 // 使用插件
 app.use(pinia);

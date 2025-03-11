@@ -1,330 +1,285 @@
 <template>
-  <el-card class="settings-card">
-    <template #header>
-      <div class="card-header">
-        <h2>{{ $t("user.settings") }}</h2>
-      </div>
-    </template>
-
-    <div class="settings-content">
-      <!-- 密码修改 -->
-      <section class="settings-section">
-        <h3>{{ $t("settings.password.title") }}</h3>
-        <el-form
-          ref="passwordFormRef"
-          :model="passwordForm"
-          :rules="passwordRules"
-          label-width="160px"
-          class="settings-form"
-        >
-          <el-form-item
-            :label="$t('settings.password.current')"
-            prop="currentPassword"
-          >
-            <el-input
-              v-model="passwordForm.currentPassword"
-              type="password"
-              show-password
-            />
-          </el-form-item>
-
-          <el-form-item :label="$t('settings.password.new')" prop="newPassword">
-            <el-input
-              v-model="passwordForm.newPassword"
-              type="password"
-              show-password
-            />
-          </el-form-item>
-
-          <el-form-item
-            :label="$t('settings.password.confirm')"
-            prop="confirmPassword"
-          >
-            <el-input
-              v-model="passwordForm.confirmPassword"
-              type="password"
-              show-password
-            />
-          </el-form-item>
-
-          <el-form-item>
-            <el-button
-              type="primary"
-              :loading="passwordLoading"
-              @click="handlePasswordChange"
-            >
-              {{ $t("settings.password.change") }}
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </section>
-
-      <!-- 通知设置 -->
-      <section class="settings-section">
-        <h3>{{ $t("settings.notifications.title") }}</h3>
-        <el-form
-          ref="notificationFormRef"
-          :model="notificationForm"
-          label-width="160px"
-          class="settings-form"
-        >
-          <el-form-item :label="$t('settings.notifications.email')">
-            <el-switch v-model="notificationForm.emailEnabled" />
-          </el-form-item>
-
-          <el-form-item :label="$t('settings.notifications.order')">
-            <el-checkbox-group v-model="notificationForm.orderNotifications">
-              <el-checkbox label="payment">
-                {{ $t("settings.notifications.orderPayment") }}
-              </el-checkbox>
-              <el-checkbox label="shipping">
-                {{ $t("settings.notifications.orderShipping") }}
-              </el-checkbox>
-              <el-checkbox label="delivery">
-                {{ $t("settings.notifications.orderDelivery") }}
-              </el-checkbox>
-            </el-checkbox-group>
-          </el-form-item>
-
-          <el-form-item :label="$t('settings.notifications.marketing')">
-            <el-checkbox-group
-              v-model="notificationForm.marketingNotifications"
-            >
-              <el-checkbox label="promotion">
-                {{ $t("settings.notifications.promotion") }}
-              </el-checkbox>
-              <el-checkbox label="newsletter">
-                {{ $t("settings.notifications.newsletter") }}
-              </el-checkbox>
-            </el-checkbox-group>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button
-              type="primary"
-              :loading="notificationLoading"
-              @click="handleNotificationSave"
-            >
-              {{ $t("common.save") }}
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </section>
-
-      <!-- 账号注销 -->
-      <section class="settings-section danger-zone">
-        <h3>{{ $t("settings.dangerZone.title") }}</h3>
-        <div class="danger-zone-content">
-          <p class="warning-text">
-            {{ $t("settings.dangerZone.deleteAccountWarning") }}
-          </p>
-          <el-button type="danger" @click="handleDeleteAccount">
-            {{ $t("settings.dangerZone.deleteAccount") }}
-          </el-button>
+  <div class="settings-container">
+    <el-card class="settings-card">
+      <template #header>
+        <div class="card-header">
+          <span>{{ $t("user.settings.title") }}</span>
         </div>
-      </section>
-    </div>
-  </el-card>
+      </template>
+
+      <el-tabs v-model="activeTab">
+        <!-- 通知设置 -->
+        <el-tab-pane
+          :label="$t('user.settings.tabs.notifications')"
+          name="notifications"
+        >
+          <el-form :model="notificationSettings" label-width="200px">
+            <el-form-item :label="$t('user.settings.notifications.email')">
+              <el-switch v-model="notificationSettings.email" />
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.notifications.sms')">
+              <el-switch v-model="notificationSettings.sms" />
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.notifications.push')">
+              <el-switch v-model="notificationSettings.push" />
+            </el-form-item>
+            <el-form-item
+              :label="$t('user.settings.notifications.orderUpdates')"
+            >
+              <el-switch v-model="notificationSettings.orderUpdates" />
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.notifications.promotions')">
+              <el-switch v-model="notificationSettings.promotions" />
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 隐私设置 -->
+        <el-tab-pane :label="$t('user.settings.tabs.privacy')" name="privacy">
+          <el-form :model="privacySettings" label-width="200px">
+            <el-form-item :label="$t('user.settings.privacy.profile')">
+              <el-radio-group v-model="privacySettings.profileVisibility">
+                <el-radio label="public">{{
+                  $t("user.settings.privacy.public")
+                }}</el-radio>
+                <el-radio label="friends">{{
+                  $t("user.settings.privacy.friends")
+                }}</el-radio>
+                <el-radio label="private">{{
+                  $t("user.settings.privacy.private")
+                }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.privacy.searchable')">
+              <el-switch v-model="privacySettings.searchable" />
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.privacy.activityVisible')">
+              <el-switch v-model="privacySettings.activityVisible" />
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 语言和区域 -->
+        <el-tab-pane :label="$t('user.settings.tabs.locale')" name="locale">
+          <el-form :model="localeSettings" label-width="200px">
+            <el-form-item :label="$t('user.settings.locale.language')">
+              <el-select v-model="localeSettings.language">
+                <el-option
+                  v-for="lang in languages"
+                  :key="lang.value"
+                  :label="lang.label"
+                  :value="lang.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.locale.timezone')">
+              <el-select v-model="localeSettings.timezone">
+                <el-option
+                  v-for="tz in timezones"
+                  :key="tz.value"
+                  :label="tz.label"
+                  :value="tz.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.locale.currency')">
+              <el-select v-model="localeSettings.currency">
+                <el-option
+                  v-for="currency in currencies"
+                  :key="currency.value"
+                  :label="currency.label"
+                  :value="currency.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 主题设置 -->
+        <el-tab-pane :label="$t('user.settings.tabs.theme')" name="theme">
+          <el-form :model="themeSettings" label-width="200px">
+            <el-form-item :label="$t('user.settings.theme.mode')">
+              <el-radio-group v-model="themeSettings.mode">
+                <el-radio label="light">{{
+                  $t("user.settings.theme.light")
+                }}</el-radio>
+                <el-radio label="dark">{{
+                  $t("user.settings.theme.dark")
+                }}</el-radio>
+                <el-radio label="system">{{
+                  $t("user.settings.theme.system")
+                }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.theme.color')">
+              <el-color-picker v-model="themeSettings.primaryColor" />
+            </el-form-item>
+            <el-form-item :label="$t('user.settings.theme.fontSize')">
+              <el-slider
+                v-model="themeSettings.fontSize"
+                :min="12"
+                :max="20"
+                :step="1"
+                show-input
+              />
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+
+      <div class="settings-actions">
+        <el-button type="primary" @click="handleSave">
+          {{ $t("common.save") }}
+        </el-button>
+        <el-button @click="handleReset">
+          {{ $t("common.reset") }}
+        </el-button>
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "@vue/runtime-core";
-import { ElMessage, ElMessageBox } from "element-plus";
-import type { FormInstance } from "element-plus";
+import { ref, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import { useI18n } from "vue-i18n";
+import type {
+  NotificationSettings,
+  PrivacySettings,
+  LocaleSettings,
+  ThemeSettings,
+} from "@/types/settings";
 
-// 密码表单
-const passwordFormRef = ref<FormInstance>();
-const passwordLoading = ref(false);
-const passwordForm = ref({
-  currentPassword: "",
-  newPassword: "",
-  confirmPassword: "",
+const { t } = useI18n();
+
+// 当前激活的标签页
+const activeTab = ref("notifications");
+
+// 通知设置
+const notificationSettings = ref<NotificationSettings>({
+  email: true,
+  sms: false,
+  push: true,
+  orderUpdates: true,
+  promotions: false,
 });
 
-// 密码验证规则
-const passwordRules = {
-  currentPassword: [
-    {
-      required: true,
-      message: "settings.password.currentRequired",
-      trigger: "blur",
-    },
-    { min: 6, message: "settings.password.minLength", trigger: "blur" },
-  ],
-  newPassword: [
-    {
-      required: true,
-      message: "settings.password.newRequired",
-      trigger: "blur",
-    },
-    { min: 6, message: "settings.password.minLength", trigger: "blur" },
-  ],
-  confirmPassword: [
-    {
-      required: true,
-      message: "settings.password.confirmRequired",
-      trigger: "blur",
-    },
-    {
-      validator: (rule: any, value: string, callback: Function) => {
-        if (value !== passwordForm.value.newPassword) {
-          callback(new Error("settings.password.mismatch"));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur",
-    },
-  ],
-};
-
-// 通知表单
-const notificationFormRef = ref<FormInstance>();
-const notificationLoading = ref(false);
-const notificationForm = ref({
-  emailEnabled: true,
-  orderNotifications: ["payment", "shipping"],
-  marketingNotifications: ["newsletter"],
+// 隐私设置
+const privacySettings = ref<PrivacySettings>({
+  profileVisibility: "public",
+  searchable: true,
+  activityVisible: true,
 });
 
-// 修改密码
-const handlePasswordChange = async () => {
-  if (!passwordFormRef.value) return;
+// 语言和区域设置
+const localeSettings = ref<LocaleSettings>({
+  language: "zh-CN",
+  timezone: "Asia/Shanghai",
+  currency: "CNY",
+});
 
-  await passwordFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      passwordLoading.value = true;
-      try {
-        await fetch("/api/user/password", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            currentPassword: passwordForm.value.currentPassword,
-            newPassword: passwordForm.value.newPassword,
-          }),
-        });
-        ElMessage.success("settings.password.changeSuccess");
-        // 清空表单
-        passwordForm.value = {
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        };
-      } catch (error) {
-        ElMessage.error("settings.password.changeFailed");
-      } finally {
-        passwordLoading.value = false;
-      }
-    }
-  });
-};
+// 主题设置
+const themeSettings = ref<ThemeSettings>({
+  mode: "light",
+  primaryColor: "#409EFF",
+  fontSize: 14,
+});
 
-// 保存通知设置
-const handleNotificationSave = async () => {
-  notificationLoading.value = true;
+// 语言选项
+const languages = [
+  { value: "zh-CN", label: "简体中文" },
+  { value: "en-US", label: "English" },
+  { value: "ja-JP", label: "日本語" },
+];
+
+// 时区选项
+const timezones = [
+  { value: "Asia/Shanghai", label: "(GMT+8:00) 北京" },
+  { value: "Asia/Tokyo", label: "(GMT+9:00) 东京" },
+  { value: "America/New_York", label: "(GMT-5:00) 纽约" },
+];
+
+// 货币选项
+const currencies = [
+  { value: "CNY", label: "人民币 (¥)" },
+  { value: "USD", label: "美元 ($)" },
+  { value: "EUR", label: "欧元 (€)" },
+];
+
+// 获取设置
+const fetchSettings = async () => {
   try {
-    await fetch("/api/user/notifications", {
+    const response = await fetch("/api/user/settings");
+    const data = await response.json();
+    notificationSettings.value = data.notifications;
+    privacySettings.value = data.privacy;
+    localeSettings.value = data.locale;
+    themeSettings.value = data.theme;
+  } catch (error) {
+    ElMessage.error(t("common.error.fetchFailed"));
+  }
+};
+
+// 保存设置
+const handleSave = async () => {
+  try {
+    await fetch("/api/user/settings", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(notificationForm.value),
+      body: JSON.stringify({
+        notifications: notificationSettings.value,
+        privacy: privacySettings.value,
+        locale: localeSettings.value,
+        theme: themeSettings.value,
+      }),
     });
-    ElMessage.success("settings.notifications.saveSuccess");
+    ElMessage.success(t("user.settings.messages.saveSuccess"));
   } catch (error) {
-    ElMessage.error("settings.notifications.saveFailed");
-  } finally {
-    notificationLoading.value = false;
+    ElMessage.error(t("user.settings.messages.saveFailed"));
   }
 };
 
-// 删除账号
-const handleDeleteAccount = async () => {
+// 重置设置
+const handleReset = async () => {
   try {
-    await ElMessageBox.confirm(
-      "settings.dangerZone.deleteConfirm",
-      "common.warning",
-      {
-        type: "warning",
-        confirmButtonText: "settings.dangerZone.confirmDelete",
-        confirmButtonClass: "el-button--danger",
-      }
-    );
-
-    await fetch("/api/user", {
-      method: "DELETE",
-    });
-
-    ElMessage.success("settings.dangerZone.deleteSuccess");
-    // 重定向到首页或登出
-    window.location.href = "/";
+    await fetch("/api/user/settings/reset", { method: "POST" });
+    await fetchSettings();
+    ElMessage.success(t("user.settings.messages.resetSuccess"));
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("settings.dangerZone.deleteFailed");
-    }
+    ElMessage.error(t("user.settings.messages.resetFailed"));
   }
 };
+
+// 初始化
+onMounted(() => {
+  fetchSettings();
+});
 </script>
 
-<style scoped>
-.settings-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
-  margin-bottom: 20px;
-}
-
-.settings-section {
-  margin-bottom: 40px;
-  padding-bottom: 40px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.settings-section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.settings-section h3 {
-  margin: 0 0 20px;
-  font-size: 18px;
-  color: var(--el-text-color-primary);
-}
-
-.settings-form {
-  max-width: 500px;
-}
-
-.danger-zone {
-  background-color: var(--el-color-danger-light-9);
+<style scoped lang="scss">
+.settings-container {
   padding: 20px;
-  border-radius: 4px;
-}
 
-.danger-zone h3 {
-  color: var(--el-color-danger);
-}
+  .settings-card {
+    .card-header {
+      margin-bottom: 20px;
+    }
 
-.danger-zone-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    :deep(.el-tabs__nav) {
+      margin-bottom: 20px;
+    }
 
-.warning-text {
-  margin: 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-  max-width: 70%;
-}
+    .el-form {
+      max-width: 600px;
+      margin: 0 auto;
+    }
 
-:deep(.el-checkbox-group) {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    .settings-actions {
+      margin-top: 30px;
+      text-align: center;
+    }
+  }
 }
 </style>

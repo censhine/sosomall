@@ -26,22 +26,9 @@
       "@/*": ["src/*"]
     },
 
-    /* Type Declarations */
-    "types": [
-      "vite/client",
-      "element-plus/global",
-      "@vue/runtime-core",
-      "vue",
-      "vuex",
-      "vue-i18n"
-    ]
+    /* Type Checking */
+    "types": ["element-plus/global", "vite/client"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "vite.config.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

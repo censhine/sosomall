@@ -11,14 +11,24 @@ export default defineConfig({
     vue(),
     AutoImport({
       resolvers: [ElementPlusResolver()],
+      imports: ["vue", "vue-router", "vue-i18n", "pinia"],
+      dts: "src/types/auto-imports.d.ts",
     }),
     Components({
       resolvers: [ElementPlusResolver()],
+      dts: "src/types/components.d.ts",
     }),
   ],
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/styles/variables.scss" as *;`,
+      },
     },
   },
   build: {
@@ -29,10 +39,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 3000,
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },

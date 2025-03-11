@@ -6,8 +6,11 @@ import fr from "./locales/fr";
 import ja from "./locales/ja";
 import ru from "./locales/ru";
 
+// 定义语言类型
+type Language = "zh-CN" | "en" | "de" | "fr" | "ja" | "ru";
+
 // 支持的语言列表
-export const SUPPORTED_LANGUAGES = {
+export const SUPPORTED_LANGUAGES: Record<Language, string> = {
   "zh-CN": "简体中文",
   en: "English",
   de: "Deutsch",
@@ -22,21 +25,53 @@ const messages = {
       home: "首页",
       cart: "购物车",
       user: "个人中心",
+      products: "全部商品",
+      categories: "商品分类",
+      brands: "品牌专区",
     },
     error: {
       pageNotFound: "页面不存在",
     },
     common: {
+      title: "SOSO商城",
       backToHome: "返回首页",
+      viewAll: "查看全部",
+      error: {
+        fetchFailed: "数据加载失败",
+      },
+      allRightsReserved: "版权所有",
     },
     home: {
-      hotProducts: "热卖商品",
-      newProducts: "新品上架",
-      categories: "商品分类",
-      brands: "品牌展示",
+      banner: {
+        viewMore: "了解更多",
+      },
+      categories: {
+        title: "商品分类",
+        products: "件商品",
+      },
+      hotProducts: {
+        title: "热卖商品",
+      },
+      newProducts: {
+        title: "新品上架",
+      },
+      brands: {
+        title: "品牌展示",
+        products: "件商品",
+      },
     },
     product: {
       addToCart: "加入购物车",
+    },
+    user: {
+      profile: "个人资料",
+      orders: "我的订单",
+    },
+    auth: {
+      login: "登录",
+      register: "注册",
+      logout: "退出登录",
+      logoutSuccess: "退出成功",
     },
   },
   en: {
@@ -44,21 +79,53 @@ const messages = {
       home: "Home",
       cart: "Cart",
       user: "User",
+      products: "Products",
+      categories: "Categories",
+      brands: "Brands",
     },
     error: {
       pageNotFound: "Page not found",
     },
     common: {
+      title: "SOSO Mall",
       backToHome: "Back to Home",
+      viewAll: "View All",
+      error: {
+        fetchFailed: "Failed to load data",
+      },
+      allRightsReserved: "All Rights Reserved",
     },
     home: {
-      hotProducts: "Hot Products",
-      newProducts: "New Arrivals",
-      categories: "Categories",
-      brands: "Brands",
+      banner: {
+        viewMore: "Learn More",
+      },
+      categories: {
+        title: "Categories",
+        products: "Products",
+      },
+      hotProducts: {
+        title: "Hot Products",
+      },
+      newProducts: {
+        title: "New Arrivals",
+      },
+      brands: {
+        title: "Brands",
+        products: "Products",
+      },
     },
     product: {
       addToCart: "Add to Cart",
+    },
+    user: {
+      profile: "Profile",
+      orders: "Orders",
+    },
+    auth: {
+      login: "Login",
+      register: "Register",
+      logout: "Logout",
+      logoutSuccess: "Logout successful",
     },
   },
   de,
@@ -68,8 +135,8 @@ const messages = {
 };
 
 // 获取浏览器语言设置
-const getBrowserLanguage = () => {
-  const language = navigator.language;
+const getBrowserLanguage = (): Language => {
+  const language = navigator.language as Language;
   return Object.keys(messages).includes(language) ? language : "en";
 };
 
@@ -82,7 +149,7 @@ const i18n = createI18n({
 });
 
 // 切换语言的工具函数
-export const setLocale = (locale: string) => {
+export const setLocale = (locale: Language) => {
   i18n.global.locale.value = locale;
   localStorage.setItem("locale", locale);
   document.querySelector("html")?.setAttribute("lang", locale);

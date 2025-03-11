@@ -1,0 +1,84 @@
+// 按钮样式
+.el-button {
+  &--primary {
+    --el-button-hover-bg-color: var(--el-color-primary-light-3);
+    --el-button-hover-border-color: var(--el-color-primary-light-3);
+  }
+}
+
+// 输入框样式
+.el-input {
+  --el-input-hover-border-color: var(--el-color-primary);
+  --el-input-focus-border-color: var(--el-color-primary);
+}
+
+// 表格样式
+.el-table {
+  --el-table-header-bg-color: var(--el-bg-color-page);
+  --el-table-row-hover-bg-color: var(--el-color-primary-light-9);
+  
+  th {
+    font-weight: 600;
+  }
+}
+
+// 分页样式
+.el-pagination {
+  --el-pagination-hover-color: var(--el-color-primary);
+  
+  .btn-prev,
+  .btn-next {
+    background: transparent;
+  }
+}
+
+// 表单样式
+.el-form {
+  &-item {
+    margin-bottom: 22px;
+  }
+  
+  &-label {
+    font-weight: 500;
+  }
+}
+
+// 卡片样式
+.el-card {
+  --el-card-border-color: var(--el-border-color-lighter);
+  
+  &:hover {
+    box-shadow: var(--el-box-shadow-light);
+  }
+}
+
+// 对话框样式
+.el-dialog {
+  --el-dialog-border-radius: var(--el-border-radius-base);
+  
+  &__header {
+    margin-right: 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+  
+  &__footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+}
+
+// 消息提示样式
+.el-message {
+  --el-message-min-width: 300px;
+  --el-message-padding: 12px 24px;
+  
+  &-icon {
+    margin-right: 10px;
+  }
+}
+
+// 加载中样式
+.el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.8);
+} 

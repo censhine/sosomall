@@ -5,32 +5,41 @@ export interface ApiResponse<T = any> {
 }
 
 export interface Banner {
-  id: number;
+  id: string;
   title: string;
   image: string;
   link: string;
+  sort: number;
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
-  image: string;
+  description: string;
   price: number;
-  originalPrice?: number;
-  discount?: number;
+  originalPrice: number;
+  image: string;
+  sales: number;
   rating: number;
-  stock: number;
+  category: string;
+  tags: string[];
+  isNew?: boolean;
+  isHot?: boolean;
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
+  icon: string;
   image: string;
   description: string;
+  productCount: number;
 }
 
 export interface Brand {
-  id: number;
+  id: string;
   name: string;
   logo: string;
+  description: string;
+  productCount: number;
 }

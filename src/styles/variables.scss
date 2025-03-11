@@ -1,0 +1,52 @@
+:root {
+  // 颜色变量
+  --primary-color: var(--el-color-primary);
+  --success-color: var(--el-color-success);
+  --warning-color: var(--el-color-warning);
+  --danger-color: var(--el-color-danger);
+  --info-color: var(--el-color-info);
+
+  // 文字颜色
+  --text-color-primary: var(--el-text-color-primary);
+  --text-color-regular: var(--el-text-color-regular);
+  --text-color-secondary: var(--el-text-color-secondary);
+  --text-color-placeholder: var(--el-text-color-placeholder);
+  --text-color-disabled: var(--el-text-color-disabled);
+
+  // 边框颜色
+  --border-color: var(--el-border-color);
+  --border-color-light: var(--el-border-color-light);
+  --border-color-lighter: var(--el-border-color-lighter);
+  --border-color-extra-light: var(--el-border-color-extra-light);
+  --border-color-dark: var(--el-border-color-dark);
+  --border-color-darker: var(--el-border-color-darker);
+
+  // 背景颜色
+  --bg-color: var(--el-bg-color);
+  --bg-color-page: var(--el-bg-color-page);
+  --bg-color-overlay: var(--el-bg-color-overlay);
+
+  // 阴影
+  --box-shadow-light: var(--el-box-shadow-light);
+  --box-shadow: var(--el-box-shadow);
+  --box-shadow-dark: var(--el-box-shadow-dark);
+}
+
+// 布局尺寸
+$header-height: 60px;
+$footer-height: 60px;
+$sidebar-width: 240px;
+$max-width: 1200px;
+
+// 间距
+$spacing-mini: 4px;
+$spacing-small: 8px;
+$spacing-base: 16px;
+$spacing-large: 24px;
+$spacing-larger: 32px;
+
+// 圆角
+$border-radius-small: 2px;
+$border-radius-base: 4px;
+$border-radius-large: 8px;
+$border-radius-circle: 50%; 

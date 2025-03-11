@@ -1,390 +1,357 @@
 <template>
-  <div class="home">
-    <!-- 轮播图部分 -->
-    <el-carousel height="400px">
-      <el-carousel-item v-for="banner in banners" :key="banner.id">
-        <img :src="banner.image" :alt="banner.title" class="banner-image" />
-      </el-carousel-item>
-    </el-carousel>
-
-    <!-- 热卖商品 -->
-    <section class="hot-products">
-      <h2>{{ $t("home.hotProducts") }}</h2>
-      <el-row :gutter="20">
-        <el-col
-          :xs="12"
-          :sm="8"
-          :md="6"
-          :lg="4"
-          v-for="product in hotProducts"
-          :key="product.id"
-        >
-          <product-card :product="product" />
-        </el-col>
-      </el-row>
-    </section>
-
-    <!-- 新品上架 -->
-    <section class="new-products">
-      <h2>{{ $t("home.newProducts") }}</h2>
-      <el-row :gutter="20">
-        <el-col
-          :xs="12"
-          :sm="8"
-          :md="6"
-          :lg="4"
-          v-for="product in newProducts"
-          :key="product.id"
-        >
-          <product-card :product="product" />
-        </el-col>
-      </el-row>
-    </section>
+  <div class="home-container">
+    <!-- 轮播图 -->
+    <div class="banner-section">
+      <el-carousel height="400px" :interval="5000" arrow="hover">
+        <el-carousel-item v-for="banner in banners" :key="banner.id">
+          <el-image :src="banner.image" fit="cover" class="banner-image">
+            <template #error>
+              <div class="image-slot">
+                <el-icon><Picture /></el-icon>
+              </div>
+            </template>
+          </el-image>
+          <div class="banner-content">
+            <h2>{{ banner.title }}</h2>
+            <el-button type="primary" @click="handleBannerClick(banner)">
+              {{ $t("home.banner.viewMore") }}
+            </el-button>
+          </div>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
 
     <!-- 商品分类 -->
-    <section class="product-categories">
-      <h2>{{ $t("home.categories") }}</h2>
+    <div class="section categories-section">
+      <div class="section-header">
+        <h2>{{ $t("home.categories.title") }}</h2>
+        <el-button text @click="$router.push('/categories')">
+          {{ $t("common.viewAll") }}
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
       <el-row :gutter="20">
         <el-col
+          v-for="category in categories"
+          :key="category.id"
           :xs="12"
           :sm="8"
           :md="6"
-          v-for="category in categories"
-          :key="category.id"
+          :lg="4"
         >
           <el-card
+            shadow="hover"
             class="category-card"
-            :body-style="{ padding: '0px' }"
-            @click="goToCategory(category.id)"
+            @click="handleCategoryClick(category)"
           >
-            <img
-              :src="category.image"
-              :alt="category.name"
-              class="category-image"
-            />
-            <div class="category-info">
-              <h3>{{ category.name }}</h3>
-              <p>{{ category.description }}</p>
+            <div class="category-icon">
+              <el-icon>
+                <component :is="category.icon" />
+              </el-icon>
             </div>
+            <h3>{{ category.name }}</h3>
+            <p>
+              {{ category.productCount }} {{ $t("home.categories.products") }}
+            </p>
           </el-card>
         </el-col>
       </el-row>
-    </section>
+    </div>
+
+    <!-- 热门商品 -->
+    <div class="section hot-products-section">
+      <div class="section-header">
+        <h2>{{ $t("home.hotProducts.title") }}</h2>
+        <el-button text @click="$router.push('/products?sort=hot')">
+          {{ $t("common.viewAll") }}
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+      <el-row :gutter="20">
+        <el-col
+          v-for="product in hotProducts"
+          :key="product.id"
+          :xs="12"
+          :sm="8"
+          :md="6"
+          :lg="4"
+        >
+          <product-card :product="product" />
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- 新品上市 -->
+    <div class="section new-products-section">
+      <div class="section-header">
+        <h2>{{ $t("home.newProducts.title") }}</h2>
+        <el-button text @click="$router.push('/products?sort=new')">
+          {{ $t("common.viewAll") }}
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+      <el-row :gutter="20">
+        <el-col
+          v-for="product in newProducts"
+          :key="product.id"
+          :xs="12"
+          :sm="8"
+          :md="6"
+          :lg="3"
+        >
+          <product-card :product="product" />
+        </el-col>
+      </el-row>
+    </div>
 
     <!-- 品牌展示 -->
-    <section class="brands">
-      <h2>{{ $t("home.brands") }}</h2>
+    <div class="section brands-section">
+      <div class="section-header">
+        <h2>{{ $t("home.brands.title") }}</h2>
+        <el-button text @click="$router.push('/brands')">
+          {{ $t("common.viewAll") }}
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
       <el-row :gutter="20">
-        <el-col :xs="8" :sm="6" :md="4" v-for="brand in brands" :key="brand.id">
+        <el-col
+          v-for="brand in brands"
+          :key="brand.id"
+          :xs="12"
+          :sm="8"
+          :md="6"
+          :lg="2.4"
+        >
           <el-card
+            shadow="hover"
             class="brand-card"
-            :body-style="{ padding: '10px' }"
-            @click="goToBrand(brand.id)"
+            @click="handleBrandClick(brand)"
           >
-            <img :src="brand.logo" :alt="brand.name" class="brand-logo" />
+            <el-image :src="brand.logo" class="brand-logo" fit="contain">
+              <template #error>
+                <div class="image-slot">
+                  <el-icon><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <h3>{{ brand.name }}</h3>
+            <p>{{ brand.productCount }} {{ $t("home.brands.products") }}</p>
           </el-card>
         </el-col>
       </el-row>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "@vue/runtime-core";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { Picture, ArrowRight } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
 import ProductCard from "@/components/ProductCard.vue";
-import { getMockImage, getMockImages } from "@/utils/mockImages";
-import {
-  getBannersMock as getBanners,
-  getHotProductsMock as getHotProducts,
-  getNewProductsMock as getNewProducts,
-  getCategoriesMock as getCategories,
-  getBrandsMock as getBrands,
-} from "@/api/home";
-
-interface Banner {
-  id: number;
-  title: string;
-  image: string;
-  link: string;
-}
-
-interface ApiProduct {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice?: number;
-  description?: string;
-  stock?: number;
-  sales?: number;
-  rating: number;
-  specs?: {
-    Color: string;
-    Size: string;
-  };
-  categoryId?: number;
-  brandId?: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice: number;
-  description: string;
-  images: string[];
-  stock: number;
-  sales: number;
-  rating: number;
-  specs: {
-    Color: string;
-    Size: string;
-  };
-  categoryId: number;
-  brandId: number;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  image: string;
-  description: string;
-}
-
-interface Brand {
-  id: number;
-  name: string;
-  logo: string;
-}
+import type { Banner, Product, Category, Brand } from "@/types/home";
 
 const router = useRouter();
 const { t } = useI18n();
 
+// 数据状态
 const banners = ref<Banner[]>([]);
+const categories = ref<Category[]>([]);
 const hotProducts = ref<Product[]>([]);
 const newProducts = ref<Product[]>([]);
-const categories = ref<Category[]>([]);
 const brands = ref<Brand[]>([]);
 
 // 获取轮播图数据
 const fetchBanners = async () => {
   try {
-    const res = await getBanners();
-    banners.value = res.data.map((banner) => ({
-      ...banner,
-      image: getMockImage("banner", `banner_${banner.id}`),
-    }));
+    const response = await fetch("/api/banners");
+    const data = await response.json();
+    banners.value = data.items.slice(0, 5); // 只显示前5张
   } catch (error) {
-    console.error("Failed to fetch banners:", error);
+    ElMessage.error(t("common.error.fetchFailed"));
   }
 };
 
-// 获取热卖商品
-const fetchHotProducts = async () => {
-  try {
-    const res = await getHotProducts();
-    // 显示前12个热卖商品
-    hotProducts.value = res.data.slice(0, 12).map((product: ApiProduct) => ({
-      id: product.id,
-      name: product.name,
-      image: getMockImage("product", `product_${product.id}`),
-      price: product.price,
-      originalPrice: product.originalPrice || product.price * 1.2,
-      description: product.description || `Description for ${product.name}`,
-      images: getMockImages("product", 4, `product_${product.id}`),
-      stock: product.stock || 100,
-      sales: product.sales || Math.floor(Math.random() * 1000),
-      rating: product.rating,
-      specs: product.specs || {
-        Color: ["Red", "Blue", "Black"][Math.floor(Math.random() * 3)],
-        Size: ["S", "M", "L", "XL"][Math.floor(Math.random() * 4)],
-      },
-      categoryId: product.categoryId || Math.floor(Math.random() * 10) + 1,
-      brandId: product.brandId || Math.floor(Math.random() * 10) + 1,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch hot products:", error);
-  }
-};
-
-// 获取新品上架
-const fetchNewProducts = async () => {
-  try {
-    const res = await getNewProducts();
-    // 显示前12个新品
-    newProducts.value = res.data.slice(0, 12).map((product: ApiProduct) => ({
-      id: product.id,
-      name: product.name,
-      image: getMockImage("product", `product_${product.id}`),
-      price: product.price,
-      originalPrice: product.originalPrice || product.price * 1.2,
-      description: product.description || `Description for ${product.name}`,
-      images: getMockImages("product", 4, `product_${product.id}`),
-      stock: product.stock || 100,
-      sales: product.sales || Math.floor(Math.random() * 1000),
-      rating: product.rating,
-      specs: product.specs || {
-        Color: ["Red", "Blue", "Black"][Math.floor(Math.random() * 3)],
-        Size: ["S", "M", "L", "XL"][Math.floor(Math.random() * 4)],
-      },
-      categoryId: product.categoryId || Math.floor(Math.random() * 10) + 1,
-      brandId: product.brandId || Math.floor(Math.random() * 10) + 1,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch new products:", error);
-  }
-};
-
-// 获取商品分类
+// 获取分类数据
 const fetchCategories = async () => {
   try {
-    const res = await getCategories();
-    categories.value = res.data.map((category) => ({
-      ...category,
-      image: getMockImage("product", `category_${category.id}`),
-    }));
+    const response = await fetch("/api/categories");
+    const data = await response.json();
+    categories.value = data.items.slice(0, 6); // 只显示前6个
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
+    ElMessage.error(t("common.error.fetchFailed"));
+  }
+};
+
+// 获取热门商品
+const fetchHotProducts = async () => {
+  try {
+    const response = await fetch("/api/products/hot");
+    const data = await response.json();
+    hotProducts.value = data.items.slice(0, 6); // 只显示前6个
+  } catch (error) {
+    ElMessage.error(t("common.error.fetchFailed"));
+  }
+};
+
+// 获取新品
+const fetchNewProducts = async () => {
+  try {
+    const response = await fetch("/api/products/new");
+    const data = await response.json();
+    newProducts.value = data.items.slice(0, 8); // 只显示前8个
+  } catch (error) {
+    ElMessage.error(t("common.error.fetchFailed"));
   }
 };
 
 // 获取品牌数据
 const fetchBrands = async () => {
   try {
-    const res = await getBrands();
-    brands.value = res.data.map((brand) => ({
-      ...brand,
-      logo: getMockImage("logo", `brand_${brand.id}`),
-    }));
+    const response = await fetch("/api/brands");
+    const data = await response.json();
+    brands.value = data.items.slice(0, 10); // 只显示前10个
   } catch (error) {
-    console.error("Failed to fetch brands:", error);
+    ElMessage.error(t("common.error.fetchFailed"));
   }
 };
 
-// 跳转到分类页面
-const goToCategory = (id: number) => {
-  router.push(`/category/${id}`);
+// 点击处理函数
+const handleBannerClick = (banner: Banner) => {
+  if (banner.link) {
+    router.push(banner.link);
+  }
 };
 
-// 跳转到品牌页面
-const goToBrand = (id: number) => {
-  router.push(`/brand/${id}`);
+const handleCategoryClick = (category: Category) => {
+  router.push(`/products?category=${category.id}`);
 };
 
+const handleBrandClick = (brand: Brand) => {
+  router.push(`/products?brand=${brand.id}`);
+};
+
+// 初始化
 onMounted(() => {
   fetchBanners();
+  fetchCategories();
   fetchHotProducts();
   fetchNewProducts();
-  fetchCategories();
   fetchBrands();
 });
 </script>
 
-<style scoped>
-.home {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
+<style scoped lang="scss">
+.home-container {
+  .banner-section {
+    margin-bottom: 40px;
 
-.el-carousel {
-  margin-bottom: 40px;
-  border-radius: 8px;
-  overflow: hidden;
-}
+    .banner-image {
+      width: 100%;
+      height: 100%;
+    }
 
-.banner-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+    .banner-content {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 
-section {
-  margin: 40px 0;
-}
-
-h2 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--el-text-color-primary);
-}
-
-.category-card {
-  cursor: pointer;
-  transition: transform 0.3s;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.category-card:hover {
-  transform: translateY(-5px);
-}
-
-.category-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.category-info {
-  padding: 15px;
-}
-
-.category-info h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  color: var(--el-text-color-primary);
-}
-
-.category-info p {
-  margin: 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.brand-card {
-  cursor: pointer;
-  transition: transform 0.3s;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.brand-card:hover {
-  transform: translateY(-5px);
-}
-
-.brand-logo {
-  width: 100%;
-  height: 60px;
-  object-fit: contain;
-}
-
-@media (max-width: 768px) {
-  .el-carousel {
-    height: 200px;
+      h2 {
+        margin-bottom: 20px;
+        font-size: 32px;
+      }
+    }
   }
 
-  .category-image {
-    height: 100px;
+  .section {
+    margin-bottom: 40px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      h2 {
+        margin: 0;
+        font-size: 24px;
+        color: var(--el-text-color-primary);
+      }
+    }
   }
 
-  .category-info h3 {
-    font-size: 16px;
+  .category-card {
+    cursor: pointer;
+    text-align: center;
+    padding: 20px;
+    transition: transform 0.3s;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .category-icon {
+      font-size: 40px;
+      color: var(--el-color-primary);
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--el-text-color-primary);
+    }
+
+    p {
+      margin: 0;
+      color: var(--el-text-color-secondary);
+      font-size: 14px;
+    }
   }
 
-  .category-info p {
-    font-size: 12px;
+  .brand-card {
+    cursor: pointer;
+    text-align: center;
+    padding: 20px;
+    transition: transform 0.3s;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .brand-logo {
+      width: 120px;
+      height: 60px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--el-text-color-primary);
+    }
+
+    p {
+      margin: 0;
+      color: var(--el-text-color-secondary);
+      font-size: 14px;
+    }
   }
 
-  h2 {
-    font-size: 20px;
+  .image-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--el-fill-color-light);
+    color: var(--el-text-color-secondary);
+    font-size: 30px;
   }
 }
 </style>

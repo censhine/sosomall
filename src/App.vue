@@ -65,6 +65,7 @@
           <component :is="Component" />
         </transition>
       </router-view>
+      <el-backtop />
     </el-main>
     <el-footer class="app-footer">
       <div class="footer-content">
@@ -98,12 +99,12 @@ const userNickname = computed(() => userStore.user?.nickname || "");
 
 const handleLogout = async () => {
   try {
-    await userStore.logout();
+    await userStore.logou$t();
     cartStore.clear();
-    ElMessage.success(t("auth.logoutSuccess"));
+    ElMessage.success($t("auth.logoutSuccess"));
   } catch (error) {
     console.error("Logout failed:", error);
-    ElMessage.error(t("common.error"));
+    ElMessage.error($t("common.error"));
   }
 };
 </script>

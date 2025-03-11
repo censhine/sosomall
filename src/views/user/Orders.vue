@@ -1,309 +1,223 @@
 <template>
-  <div class="orders">
-    <div class="orders-header">
-      <h1>{{ $t("nav.orders") }}</h1>
-      <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/' }">{{
-          $t("nav.home")
-        }}</el-breadcrumb-item>
-        <el-breadcrumb-item>{{ $t("nav.orders") }}</el-breadcrumb-item>
-      </el-breadcrumb>
-    </div>
-
-    <div class="orders-content" v-loading="loading">
-      <!-- 订单筛选 -->
-      <el-card class="filter-section">
-        <el-form :inline="true" :model="filterForm">
-          <el-form-item :label="$t('order.status')">
-            <el-select v-model="filterForm.status" clearable>
-              <el-option
-                v-for="(value, key) in $t('order.orderStatus')"
-                :key="key"
-                :label="value"
-                :value="key"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item :label="$t('order.dateRange')">
-            <el-date-picker
-              v-model="filterForm.dateRange"
-              type="daterange"
-              :start-placeholder="$t('common.startDate')"
-              :end-placeholder="$t('common.endDate')"
-              value-format="YYYY-MM-DD"
+  <div class="orders-container">
+    <el-card class="orders-card">
+      <template #header>
+        <div class="card-header">
+          <span>{{ $t("user.orders.title") }}</span>
+          <el-select v-model="orderStatus" class="status-filter">
+            <el-option
+              v-for="item in orderStatusOptions"
+              :key="item.value"
+              :label="$t(`user.orders.status.${item.label}`)"
+              :value="item.value"
             />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleSearch">
-              {{ $t("common.search") }}
-            </el-button>
-            <el-button @click="handleReset">
-              {{ $t("common.reset") }}
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+          </el-select>
+        </div>
+      </template>
 
-      <!-- 订单列表 -->
-      <el-card v-if="orders.length">
-        <div v-for="order in orders" :key="order.id" class="order-item">
-          <div class="order-header">
-            <div class="order-info">
-              <span class="order-id">{{ $t("order.id") }}: {{ order.id }}</span>
-              <span class="order-date">
-                {{ formatDate(order.createdAt) }}
-              </span>
-            </div>
-            <el-tag :type="getStatusType(order.status)">
-              {{ $t(`order.orderStatus.${order.status}`) }}
+      <el-table v-loading="loading" :data="orders" style="width: 100%">
+        <el-table-column
+          prop="orderNumber"
+          :label="$t('user.orders.orderNumber')"
+          width="180"
+        />
+        <el-table-column
+          prop="createTime"
+          :label="$t('user.orders.createTime')"
+          width="180"
+        >
+          <template #default="scope">
+            {{ formatDate(scope.row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="totalAmount"
+          :label="$t('user.orders.totalAmount')"
+          width="120"
+        >
+          <template #default="scope">
+            ¥{{ scope.row.totalAmount.toFixed(2) }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="status"
+          :label="$t('user.orders.status.label')"
+          width="120"
+        >
+          <template #default="scope">
+            <el-tag :type="getStatusType(scope.row.status)">
+              {{ $t(`user.orders.status.${scope.row.status}`) }}
             </el-tag>
-          </div>
-
-          <div class="order-products">
-            <div
-              v-for="product in order.products"
-              :key="product.id"
-              class="product-item"
+          </template>
+        </el-table-column>
+        <el-table-column
+          :label="$t('common.actions')"
+          width="200"
+          fixed="right"
+        >
+          <template #default="scope">
+            <el-button
+              v-if="scope.row.status === 'pending'"
+              type="primary"
+              size="small"
+              @click="handlePay(scope.row)"
             >
-              <el-image
-                :src="product.image"
-                :alt="product.name"
-                class="product-image"
-              />
-              <div class="product-info">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-specs" v-if="product.specs">
-                  <span v-for="(value, key) in product.specs" :key="key">
-                    {{ key }}: {{ value }}
-                  </span>
-                </div>
-                <div class="product-price-qty">
-                  <span class="price">¥{{ product.price.toFixed(2) }}</span>
-                  <span class="quantity">× {{ product.quantity }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+              {{ $t("user.orders.actions.pay") }}
+            </el-button>
+            <el-button
+              v-if="scope.row.status === 'pending'"
+              type="danger"
+              size="small"
+              @click="handleCancel(scope.row)"
+            >
+              {{ $t("user.orders.actions.cancel") }}
+            </el-button>
+            <el-button
+              v-if="scope.row.status === 'shipped'"
+              type="success"
+              size="small"
+              @click="handleConfirm(scope.row)"
+            >
+              {{ $t("user.orders.actions.confirm") }}
+            </el-button>
+            <el-button
+              v-if="scope.row.status === 'completed'"
+              type="info"
+              size="small"
+              @click="handleReview(scope.row)"
+            >
+              {{ $t("user.orders.actions.review") }}
+            </el-button>
+            <el-button size="small" @click="handleDetails(scope.row)">
+              {{ $t("user.orders.actions.details") }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-          <div class="order-footer">
-            <div class="order-total">
-              {{ $t("order.total") }}:
-              <span class="total-price">¥{{ order.total.toFixed(2) }}</span>
-            </div>
-            <div class="order-actions">
-              <el-button
-                v-if="order.status === 'pending'"
-                type="primary"
-                @click="handlePay(order)"
-              >
-                {{ $t("order.pay") }}
-              </el-button>
-              <el-button
-                v-if="order.status === 'pending'"
-                type="danger"
-                @click="handleCancel(order)"
-              >
-                {{ $t("order.cancel") }}
-              </el-button>
-              <el-button
-                v-if="order.status === 'shipped'"
-                type="success"
-                @click="handleConfirm(order)"
-              >
-                {{ $t("order.confirm") }}
-              </el-button>
-              <el-button
-                v-if="order.status === 'completed'"
-                type="primary"
-                @click="handleReview(order)"
-              >
-                {{ $t("order.review") }}
-              </el-button>
-            </div>
-          </div>
-        </div>
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
 
-        <!-- 分页 -->
-        <div class="pagination">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 30, 50]"
-            :total="total"
-            layout="total, sizes, prev, pager, next"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
-      </el-card>
+    <!-- 订单详情对话框 -->
+    <el-dialog
+      v-model="detailsVisible"
+      :title="$t('user.orders.details.title')"
+      width="70%"
+    >
+      <el-descriptions v-if="currentOrder" :column="2" border>
+        <el-descriptions-item :label="$t('user.orders.orderNumber')">
+          {{ currentOrder.orderNumber }}
+        </el-descriptions-item>
+        <el-descriptions-item :label="$t('user.orders.createTime')">
+          {{ formatDate(currentOrder.createTime) }}
+        </el-descriptions-item>
+        <el-descriptions-item :label="$t('user.orders.status.label')">
+          <el-tag :type="getStatusType(currentOrder.status)">
+            {{ $t(`user.orders.status.${currentOrder.status}`) }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item :label="$t('user.orders.totalAmount')">
+          ¥{{ currentOrder.totalAmount.toFixed(2) }}
+        </el-descriptions-item>
+      </el-descriptions>
 
-      <el-empty v-else :description="$t('order.noOrders')" />
-    </div>
+      <el-table
+        v-if="currentOrder"
+        :data="currentOrder.items"
+        style="margin-top: 20px"
+      >
+        <el-table-column
+          prop="productName"
+          :label="$t('user.orders.details.productName')"
+        />
+        <el-table-column
+          prop="quantity"
+          :label="$t('user.orders.details.quantity')"
+          width="100"
+        />
+        <el-table-column
+          prop="price"
+          :label="$t('user.orders.details.price')"
+          width="120"
+        >
+          <template #default="scope">
+            ¥{{ scope.row.price.toFixed(2) }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          :label="$t('user.orders.details.subtotal')"
+          width="120"
+        >
+          <template #default="scope">
+            ¥{{ (scope.row.price * scope.row.quantity).toFixed(2) }}
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "@vue/runtime-core";
-import { useRouter } from "vue-router";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { Order } from "@/types";
+import { useI18n } from "vue-i18n";
+import type { Order } from "@/types/order";
 
-const router = useRouter();
 const { t } = useI18n();
 
+// 状态和数据
 const loading = ref(false);
+const orders = ref<Order[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const orderStatus = ref("");
+const detailsVisible = ref(false);
+const currentOrder = ref<Order | null>(null);
 
-// 订单状态列表
-const orderStatuses = ["pending", "paid", "shipped", "completed", "cancelled"];
-
-// 筛选表单
-const filterForm = ref({
-  status: "",
-  dateRange: [] as string[],
-});
-
-// 订单列表（模拟数据）
-const orders = ref<Order[]>([
-  {
-    id: "202401010001",
-    products: [
-      {
-        id: 1,
-        name: "商品1",
-        price: 99.99,
-        quantity: 1,
-        image: "https://via.placeholder.com/100",
-        specs: {
-          颜色: "红色",
-          尺寸: "M",
-        },
-      },
-      {
-        id: 2,
-        name: "商品2",
-        price: 199.99,
-        quantity: 2,
-        image: "https://via.placeholder.com/100",
-      },
-    ],
-    total: 499.97,
-    status: "pending",
-    createdAt: "2024-01-01",
-  },
-]);
+// 订单状态选项
+const orderStatusOptions = [
+  { value: "", label: "all" },
+  { value: "pending", label: "pending" },
+  { value: "paid", label: "paid" },
+  { value: "shipped", label: "shipped" },
+  { value: "completed", label: "completed" },
+  { value: "cancelled", label: "cancelled" },
+];
 
 // 获取订单列表
 const fetchOrders = async () => {
   loading.value = true;
   try {
-    // TODO: 调用获取订单列表的 API
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        status: filterForm.value.status,
-        startDate: filterForm.value.dateRange[0],
-        endDate: filterForm.value.dateRange[1],
-      }),
-    });
+    const response = await fetch(
+      `/api/orders?page=${currentPage.value}&pageSize=${pageSize.value}&status=${orderStatus.value}`
+    );
     const data = await response.json();
-    orders.value = data.orders;
+    orders.value = data.items;
     total.value = data.total;
   } catch (error) {
-    ElMessage.error("Failed to fetch orders");
+    ElMessage.error(t("common.error.fetchFailed"));
   } finally {
     loading.value = false;
   }
 };
 
-// 处理筛选
-const handleSearch = () => {
-  currentPage.value = 1;
-  fetchOrders();
+// 格式化日期
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleString();
 };
 
-// 重置筛选
-const handleReset = () => {
-  filterForm.value = {
-    status: "",
-    dateRange: [],
-  };
-  handleSearch();
-};
-
-// 处理页码变化
-const handleCurrentChange = (page: number) => {
-  fetchOrders();
-};
-
-// 处理每页数量变化
-const handleSizeChange = (size: number) => {
-  currentPage.value = 1;
-  fetchOrders();
-};
-
-// 处理支付
-const handlePay = async (order: Order) => {
-  // TODO: 实现支付功能
-  try {
-    await fetch(`/api/orders/${order.id}/pay`, { method: "POST" });
-    ElMessage.success("order.paySuccess");
-    fetchOrders();
-  } catch (error) {
-    ElMessage.error("order.payFailed");
-  }
-};
-
-// 处理取消
-const handleCancel = async (order: Order) => {
-  try {
-    await ElMessageBox.confirm("order.cancelConfirm", "common.warning", {
-      type: "warning",
-    });
-    await fetch(`/api/orders/${order.id}/cancel`, { method: "POST" });
-    ElMessage.success("order.cancelSuccess");
-    fetchOrders();
-  } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("order.cancelFailed");
-    }
-  }
-};
-
-// 处理确认收货
-const handleConfirm = async (order: Order) => {
-  try {
-    await ElMessageBox.confirm(
-      "order.confirmReceiptConfirm",
-      "common.confirm",
-      {
-        type: "info",
-      }
-    );
-    await fetch(`/api/orders/${order.id}/confirm`, { method: "POST" });
-    ElMessage.success("order.confirmSuccess");
-    fetchOrders();
-  } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("order.confirmFailed");
-    }
-  }
-};
-
-// 处理评价
-const handleReview = (order: Order) => {
-  // TODO: 实现评价功能，可能需要跳转到评价页面或打开评价对话框
-};
-
-// 获取订单状态对应的标签类型
+// 获取状态标签类型
 const getStatusType = (status: string) => {
   const statusMap: Record<string, string> = {
     pending: "warning",
@@ -315,170 +229,119 @@ const getStatusType = (status: string) => {
   return statusMap[status] || "info";
 };
 
-// 格式化日期
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString();
+// 处理支付
+const handlePay = async (order: Order) => {
+  try {
+    await fetch(`/api/orders/${order.id}/pay`, { method: "POST" });
+    ElMessage.success(t("user.orders.messages.paySuccess"));
+    fetchOrders();
+  } catch (error) {
+    ElMessage.error(t("user.orders.messages.payFailed"));
+  }
 };
 
+// 处理取消
+const handleCancel = async (order: Order) => {
+  try {
+    const confirmed = await ElMessageBox.confirm(
+      t("user.orders.messages.cancelConfirm"),
+      t("common.warning"),
+      {
+        confirmButtonText: t("common.confirm"),
+        cancelButtonText: t("common.cancel"),
+        type: "warning",
+      }
+    );
+    if (confirmed) {
+      await fetch(`/api/orders/${order.id}/cancel`, { method: "POST" });
+      ElMessage.success(t("user.orders.messages.cancelSuccess"));
+      fetchOrders();
+    }
+  } catch (error) {
+    if (error !== "cancel") {
+      ElMessage.error(t("user.orders.messages.cancelFailed"));
+    }
+  }
+};
+
+// 处理确认收货
+const handleConfirm = async (order: Order) => {
+  try {
+    const confirmed = await ElMessageBox.confirm(
+      t("user.orders.messages.confirmReceiptConfirm"),
+      t("common.warning"),
+      {
+        confirmButtonText: t("common.confirm"),
+        cancelButtonText: t("common.cancel"),
+        type: "warning",
+      }
+    );
+    if (confirmed) {
+      await fetch(`/api/orders/${order.id}/confirm`, { method: "POST" });
+      ElMessage.success(t("user.orders.messages.confirmReceiptSuccess"));
+      fetchOrders();
+    }
+  } catch (error) {
+    if (error !== "cancel") {
+      ElMessage.error(t("user.orders.messages.confirmReceiptFailed"));
+    }
+  }
+};
+
+// 处理评价
+const handleReview = (order: Order) => {
+  // 实现评价逻辑
+};
+
+// 查看订单详情
+const handleDetails = (order: Order) => {
+  currentOrder.value = order;
+  detailsVisible.value = true;
+};
+
+// 分页处理
+const handleSizeChange = (val: number) => {
+  pageSize.value = val;
+  fetchOrders();
+};
+
+const handleCurrentChange = (val: number) => {
+  currentPage.value = val;
+  fetchOrders();
+};
+
+// 监听状态变化
+watch(orderStatus, () => {
+  currentPage.value = 1;
+  fetchOrders();
+});
+
+// 初始化
 onMounted(() => {
   fetchOrders();
 });
 </script>
 
-<style scoped>
-.orders {
+<style scoped lang="scss">
+.orders-container {
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
-.orders-header {
-  margin-bottom: 20px;
-}
+  .orders-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.orders-header h1 {
-  margin-bottom: 10px;
-  font-size: 24px;
-  color: #333;
-}
-
-.filter-section {
-  margin-bottom: 20px;
-}
-
-.order-item {
-  padding: 20px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.order-item:last-child {
-  border-bottom: none;
-}
-
-.order-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.order-info {
-  display: flex;
-  gap: 20px;
-  color: #666;
-}
-
-.order-id {
-  font-weight: 500;
-}
-
-.order-products {
-  margin-bottom: 20px;
-}
-
-.product-item {
-  display: flex;
-  gap: 20px;
-  padding: 10px 0;
-}
-
-.product-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.product-info {
-  flex: 1;
-}
-
-.product-name {
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.product-specs {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.product-specs span {
-  margin-right: 10px;
-}
-
-.product-price-qty {
-  color: #666;
-}
-
-.price {
-  color: #f56c6c;
-  font-weight: 500;
-  margin-right: 10px;
-}
-
-.order-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid #ebeef5;
-}
-
-.total-price {
-  color: #f56c6c;
-  font-size: 20px;
-  font-weight: 500;
-  margin-left: 10px;
-}
-
-.order-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-@media (max-width: 768px) {
-  .orders {
-    padding: 10px;
+    .status-filter {
+      width: 150px;
+    }
   }
 
-  .orders-header h1 {
-    font-size: 20px;
-  }
-
-  .order-header,
-  .order-footer {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .order-info {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .product-item {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .product-image {
-    margin: 0 auto;
-  }
-
-  .order-actions {
-    width: 100%;
-  }
-
-  .order-actions .el-button {
-    flex: 1;
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
   }
 }
 </style>

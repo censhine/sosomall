@@ -1,210 +1,167 @@
 <template>
-  <el-card class="favorites-card">
-    <template #header>
-      <div class="card-header">
-        <h2>{{ $t("user.favorites") }}</h2>
-        <el-button
-          v-if="selectedItems.length > 0"
-          type="danger"
-          @click="handleBatchDelete"
+  <div class="favorites-container">
+    <el-card class="favorites-card">
+      <template #header>
+        <div class="card-header">
+          <span>{{ $t("user.favorites.title") }}</span>
+          <el-select v-model="filterType" class="type-filter">
+            <el-option
+              v-for="item in filterOptions"
+              :key="item.value"
+              :label="$t(`user.favorites.types.${item.label}`)"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+      </template>
+
+      <el-row v-loading="loading" :gutter="20">
+        <el-col
+          v-for="item in favorites"
+          :key="item.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
+          :lg="6"
+          class="favorite-item"
         >
-          {{ $t("common.delete") }} ({{ selectedItems.length }})
-        </el-button>
-      </div>
-    </template>
-
-    <div v-loading="loading" class="favorites-list">
-      <el-empty
-        v-if="!loading && favorites.length === 0"
-        :description="$t('favorites.empty')"
-      />
-
-      <el-table
-        v-else
-        ref="tableRef"
-        :data="favorites"
-        style="width: 100%"
-        @selection-change="handleSelectionChange"
-      >
-        <!-- 选择列 -->
-        <el-table-column type="selection" width="55" />
-
-        <!-- 商品信息列 -->
-        <el-table-column :label="$t('product.title')" min-width="400">
-          <template #default="{ row }">
-            <div class="product-info">
-              <el-image
-                :src="row.image"
-                :alt="row.name"
-                class="product-image"
-                @click="handleProductClick(row)"
-              />
-              <div class="product-details">
-                <h3 class="product-name" @click="handleProductClick(row)">
-                  {{ row.name }}
-                </h3>
-                <p class="product-price">
-                  ¥{{ row.price }}
-                  <span v-if="row.originalPrice" class="original-price">
-                    ¥{{ row.originalPrice }}
-                  </span>
-                </p>
+          <el-card :body-style="{ padding: '0px' }">
+            <el-image
+              :src="item.image"
+              :alt="item.name"
+              class="item-image"
+              fit="cover"
+            />
+            <div class="item-content">
+              <h3 class="item-name" :title="item.name">{{ item.name }}</h3>
+              <div class="item-price">
+                <span class="current-price">¥{{ item.price.toFixed(2) }}</span>
+                <span v-if="item.originalPrice" class="original-price">
+                  ¥{{ item.originalPrice.toFixed(2) }}
+                </span>
+              </div>
+              <div class="item-actions">
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="handleAddToCart(item)"
+                >
+                  {{ $t("user.favorites.actions.addToCart") }}
+                </el-button>
+                <el-button
+                  type="danger"
+                  size="small"
+                  @click="handleRemove(item)"
+                >
+                  {{ $t("user.favorites.actions.remove") }}
+                </el-button>
               </div>
             </div>
-          </template>
-        </el-table-column>
+          </el-card>
+        </el-col>
+      </el-row>
 
-        <!-- 库存列 -->
-        <el-table-column :label="$t('product.stock')" width="120">
-          <template #default="{ row }">
-            <span :class="{ 'low-stock': row.stock < 10 }">
-              {{ row.stock }}
-            </span>
-          </template>
-        </el-table-column>
+      <div v-if="!loading && favorites.length === 0" class="empty-state">
+        <el-empty :description="$t('user.favorites.empty')" />
+      </div>
 
-        <!-- 操作列 -->
-        <el-table-column
-          :label="$t('common.actions')"
-          width="200"
-          fixed="right"
-        >
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button type="primary" @click="handleAddToCart(row)">
-                {{ $t("product.addToCart") }}
-              </el-button>
-              <el-button type="danger" @click="handleDelete(row)">
-                {{ $t("common.delete") }}
-              </el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-container">
+      <div v-if="favorites.length > 0" class="pagination-container">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
+          :page-sizes="[12, 24, 36, 48]"
           :total="total"
-          :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
-    </div>
-  </el-card>
+    </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "@vue/runtime-core";
-import { useRouter } from "vue-router";
+import { ref, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { Product } from "@/types";
+import { useI18n } from "vue-i18n";
+import type { FavoriteItem } from "@/types/favorite";
 
-const router = useRouter();
+const { t } = useI18n();
 
-// 状态变量
+// 状态
 const loading = ref(false);
-const favorites = ref<Product[]>([]);
-const selectedItems = ref<Product[]>([]);
+const favorites = ref<FavoriteItem[]>([]);
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(12);
 const total = ref(0);
+const filterType = ref("");
+
+// 筛选选项
+const filterOptions = [
+  { value: "", label: "all" },
+  { value: "product", label: "product" },
+  { value: "store", label: "store" },
+  { value: "brand", label: "brand" },
+];
 
 // 获取收藏列表
 const fetchFavorites = async () => {
   loading.value = true;
   try {
-    const response = await fetch("/api/favorites", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        page: currentPage.value,
-        pageSize: pageSize.value,
-      }),
-    });
+    const response = await fetch(
+      `/api/favorites?page=${currentPage.value}&pageSize=${pageSize.value}&type=${filterType.value}`
+    );
     const data = await response.json();
     favorites.value = data.items;
     total.value = data.total;
   } catch (error) {
-    ElMessage.error("Failed to fetch favorites");
+    ElMessage.error(t("common.error.fetchFailed"));
   } finally {
     loading.value = false;
   }
 };
 
-// 处理选择变化
-const handleSelectionChange = (items: Product[]) => {
-  selectedItems.value = items;
-};
-
-// 处理商品点击
-const handleProductClick = (product: Product) => {
-  router.push(`/products/${product.id}`);
-};
-
 // 添加到购物车
-const handleAddToCart = async (product: Product) => {
+const handleAddToCart = async (item: FavoriteItem) => {
   try {
-    await fetch("/api/cart", {
+    await fetch("/api/cart/add", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        productId: product.id,
+        productId: item.id,
         quantity: 1,
       }),
     });
-    ElMessage.success("cart.addSuccess");
+    ElMessage.success(t("user.favorites.messages.addToCartSuccess"));
   } catch (error) {
-    ElMessage.error("Failed to add to cart");
+    ElMessage.error(t("user.favorites.messages.addToCartFailed"));
   }
 };
 
-// 删除单个收藏
-const handleDelete = async (product: Product) => {
+// 移除收藏
+const handleRemove = async (item: FavoriteItem) => {
   try {
-    await ElMessageBox.confirm("common.deleteConfirm", "common.warning", {
-      type: "warning",
-    });
-    await fetch(`/api/favorites/${product.id}`, { method: "DELETE" });
-    ElMessage.success("Removed from favorites");
-    fetchFavorites();
-  } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("Failed to remove from favorites");
+    const confirmed = await ElMessageBox.confirm(
+      t("user.favorites.messages.removeConfirm"),
+      t("common.warning"),
+      {
+        confirmButtonText: t("common.confirm"),
+        cancelButtonText: t("common.cancel"),
+        type: "warning",
+      }
+    );
+    if (confirmed) {
+      await fetch(`/api/favorites/${item.id}`, {
+        method: "DELETE",
+      });
+      ElMessage.success(t("user.favorites.messages.removeSuccess"));
+      fetchFavorites();
     }
-  }
-};
-
-// 批量删除
-const handleBatchDelete = async () => {
-  if (selectedItems.value.length === 0) return;
-
-  try {
-    await ElMessageBox.confirm("common.deleteConfirm", "common.warning", {
-      type: "warning",
-    });
-    await fetch("/api/favorites/batch", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ids: selectedItems.value.map((item) => item.id),
-      }),
-    });
-    ElMessage.success("Removed from favorites");
-    fetchFavorites();
   } catch (error) {
     if (error !== "cancel") {
-      ElMessage.error("Failed to remove from favorites");
+      ElMessage.error(t("user.favorites.messages.removeFailed"));
     }
   }
 };
@@ -212,7 +169,6 @@ const handleBatchDelete = async () => {
 // 分页处理
 const handleSizeChange = (val: number) => {
   pageSize.value = val;
-  currentPage.value = 1;
   fetchFavorites();
 };
 
@@ -221,73 +177,92 @@ const handleCurrentChange = (val: number) => {
   fetchFavorites();
 };
 
+// 监听筛选变化
+watch(filterType, () => {
+  currentPage.value = 1;
+  fetchFavorites();
+});
+
+// 初始化
 onMounted(() => {
   fetchFavorites();
 });
 </script>
 
-<style scoped>
-.favorites-card {
-  margin-bottom: 20px;
-}
+<style scoped lang="scss">
+.favorites-container {
+  padding: 20px;
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  .favorites-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.product-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+    .type-filter {
+      width: 150px;
+    }
+  }
 
-.product-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 4px;
-  cursor: pointer;
-}
+  .favorite-item {
+    margin-bottom: 20px;
 
-.product-details {
-  flex: 1;
-}
+    .item-image {
+      width: 100%;
+      height: 200px;
+      display: block;
+    }
 
-.product-name {
-  margin: 0 0 8px;
-  font-size: 14px;
-  cursor: pointer;
-  color: var(--el-text-color-primary);
-}
+    .item-content {
+      padding: 14px;
 
-.product-name:hover {
-  color: var(--el-color-primary);
-}
+      .item-name {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.4;
+        height: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
 
-.product-price {
-  margin: 0;
-  color: var(--el-color-danger);
-  font-size: 16px;
-  font-weight: bold;
-}
+      .item-price {
+        margin: 8px 0;
 
-.original-price {
-  margin-left: 8px;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-  text-decoration: line-through;
-  font-weight: normal;
-}
+        .current-price {
+          color: var(--el-color-danger);
+          font-size: 16px;
+          font-weight: bold;
+          margin-right: 8px;
+        }
 
-.low-stock {
-  color: var(--el-color-danger);
-}
+        .original-price {
+          color: #999;
+          font-size: 12px;
+          text-decoration: line-through;
+        }
+      }
 
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
+      .item-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 40px 0;
+  }
+
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 </style>

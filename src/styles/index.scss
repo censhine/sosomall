@@ -1,0 +1,74 @@
+// 导入变量
+@import './variables.scss';
+
+// 导入基础样式
+@import './base.scss';
+
+// 导入过渡动画
+@import './transitions.scss';
+
+// 导入 Element Plus 样式覆盖
+@import './element-ui.scss';
+
+// 全局样式
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--el-font-family);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  background-color: var(--el-bg-color-page);
+}
+
+#app {
+  height: 100%;
+}
+
+// 通用容器样式
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-base);
+}
+
+// 响应式布局
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-small);
+  }
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-fill-color-lighter);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color);
+  border-radius: 3px;
+  
+  &:hover {
+    background: var(--el-border-color-darker);
+  }
+} 
