@@ -219,8 +219,8 @@ const handleSubmit = async () => {
     loading.value = true;
 
     const { confirmPassword, agreement, ...userData } = form;
-    const user = await register(userData);
-    userStore.setUser(user);
+    const { user, token } = await register(userData);
+    userStore.setUserState(user, token);
 
     ElMessage.success(t("auth.registerSuccess"));
     router.push("/user");

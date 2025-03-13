@@ -1,12 +1,6 @@
 import { defineStore } from "pinia";
 import type { User } from "@/types";
-import {
-  login,
-  logout,
-  socialLogin,
-  validateToken,
-  getUserInfo,
-} from "@/api/auth";
+import { login, register, logout, getUserInfo } from "@/api/mock/auth";
 
 interface CartItem {
   id: number;
@@ -21,43 +15,100 @@ interface UserState {
   user: User | null;
   cartCount: number;
   cart: CartItem[];
+  isInitialized: boolean;
 }
 
 export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     token: localStorage.getItem("token"),
-    user: null,
+    user: JSON.parse(localStorage.getItem("user") || "null"),
     cartCount: 0,
     cart: [],
+    isInitialized: false,
   }),
 
   getters: {
     isAuthenticated(): boolean {
       return !!this.token && !!this.user;
     },
+    isLoggedIn(): boolean {
+      return this.isAuthenticated;
+    },
   },
 
   actions: {
-    // 登录
-    async login(email: string, password: string): Promise<void> {
+    // 验证token是否有效
+    async validateToken(token: string): Promise<boolean> {
       try {
-        const { token } = await login({ email, password });
-        this.setToken(token);
-        await this.fetchUserInfo();
+        const user = await getUserInfo(token);
+        if (user) {
+          this.user = user;
+          return true;
+        }
+        return false;
       } catch (error) {
-        this.clearState();
+        return false;
+      }
+    },
+
+    // 初始化用户状态（从 localStorage 恢复）
+    async init(): Promise<void> {
+      if (this.token) {
+        try {
+          await this.fetchUserInfo();
+        } catch {
+          this.clearState();
+        }
+      }
+
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (Array.isArray(parsedCart)) {
+            this.cart = parsedCart;
+            this.updateCartCount();
+          }
+        } catch {
+          this.clearCart();
+        }
+      }
+
+      this.isInitialized = true;
+    },
+
+    // 登录
+    async login(credentials: {
+      email: string;
+      password: string;
+      remember?: boolean;
+    }): Promise<void> {
+      try {
+        const { user, token } = await login(
+          credentials.email,
+          credentials.password
+        );
+        this.setUserState(user, token);
+        this.persistUserState();
+      } catch (error) {
+        this.clearUserState();
         throw error;
       }
     },
 
-    // 第三方登录
-    async socialLogin(provider: string): Promise<void> {
+    // 注册
+    async register(userData: {
+      email: string;
+      password: string;
+      username: string;
+      phone?: string;
+    }): Promise<void> {
       try {
-        const { token } = await socialLogin(provider);
-        this.setToken(token);
-        await this.fetchUserInfo();
+        const { user, token } = await register(userData);
+        this.setUserState(user, token);
+        this.persistUserState();
       } catch (error) {
-        this.clearState();
+        this.clearUserState();
         throw error;
       }
     },
@@ -66,8 +117,10 @@ export const useUserStore = defineStore("user", {
     async logout(): Promise<void> {
       try {
         await logout();
-      } finally {
-        this.clearState();
+        this.clearUserState();
+      } catch (error) {
+        console.error("Logout failed:", error);
+        throw error;
       }
     },
 
@@ -139,6 +192,19 @@ export const useUserStore = defineStore("user", {
       this.persistCart();
     },
 
+    // 更新购物车数量
+    updateCartCount(): void {
+      this.cartCount = this.cart.reduce(
+        (total, item) => total + item.quantity,
+        0
+      );
+    },
+
+    // 持久化购物车数据
+    persistCart(): void {
+      localStorage.setItem("cart", JSON.stringify(this.cart));
+    },
+
     // 设置 token
     setToken(token: string): void {
       this.token = token;
@@ -157,56 +223,25 @@ export const useUserStore = defineStore("user", {
       }
     },
 
-    // 初始化用户状态（从 localStorage 恢复）
-    async init(): Promise<void> {
-      if (this.token) {
-        try {
-          const isValid = await validateToken(this.token);
-          if (!isValid) {
-            this.clearState();
-            return;
-          }
-          await this.fetchUserInfo();
-        } catch {
-          this.clearState();
-        }
-      }
+    // // 更新购物车数量
+    // updateCartCount(): void {
+    //   this.cartCount = this.cart.reduce((total: number, item: CartItem) => total + item.quantity, 0);
+    // },
 
-      const savedCart = localStorage.getItem("cart");
-      if (savedCart) {
-        try {
-          const parsedCart = JSON.parse(savedCart);
-          if (Array.isArray(parsedCart)) {
-            this.cart = parsedCart;
-            this.updateCartCount();
-          }
-        } catch {
-          this.clearCart();
-        }
-      }
-    },
+    // // 持久化购物车数据
+    // persistCart(): void {
+    //   localStorage.setItem("cart", JSON.stringify(this.cart));
+    // },
 
-    // 更新购物车数量
-    updateCartCount(): void {
-      this.cartCount = this.cart.reduce(
-        (total: number, item: CartItem) => total + item.quantity,
-        0
-      );
-    },
-
-    // 持久化购物车状态到 localStorage
-    persistCart(): void {
-      localStorage.setItem("cart", JSON.stringify(this.cart));
-    },
-
-    // 清除用户状态
+    // 清除所有状态
     clearState(): void {
-      this.token = null;
       this.user = null;
+      this.token = null;
       this.cartCount = 0;
       this.cart = [];
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("cart");
     },
   },
 });

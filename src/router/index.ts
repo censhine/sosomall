@@ -151,4 +151,32 @@ router.beforeEach(async (to, from, next) => {
   }
 });
 
+// 路由守卫
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore();
+
+  // 初始化用户状态
+  if (!userStore.isInitialized) {
+    await userStore.init();
+  }
+
+  // 检查页面是否需要认证
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    // 如果需要认证且未登录，重定向到登录页
+    if (!userStore.isLoggedIn) {
+      next({
+        path: "/auth/login",
+        query: { redirect: to.fullPath },
+      });
+    } else {
+      next();
+    }
+  } else if (to.meta.guest && userStore.isLoggedIn) {
+    // 已登录用户不能访问游客页面
+    next({ name: "home" });
+  } else {
+    next();
+  }
+});
+
 export default router;
