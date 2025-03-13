@@ -62,6 +62,21 @@ const messages = {
     },
     product: {
       addToCart: "加入购物车",
+      tags: {
+        new: "新品",
+        hot: "热卖",
+      },
+      sales: "{count} 人已购买",
+      actions: {
+        addToCart: "加入购物车",
+        addToFavorite: "收藏",
+      },
+      messages: {
+        addToCartSuccess: "已添加到购物车",
+        addToCartFailed: "添加购物车失败",
+        addToFavoriteSuccess: "已添加到收藏",
+        addToFavoriteFailed: "添加收藏失败",
+      },
     },
     user: {
       profile: "个人资料",
@@ -116,6 +131,21 @@ const messages = {
     },
     product: {
       addToCart: "Add to Cart",
+      tags: {
+        new: "New",
+        hot: "Hot",
+      },
+      sales: "{count} Sold",
+      actions: {
+        addToCart: "Add to Cart",
+        addToFavorite: "Favorite",
+      },
+      messages: {
+        addToCartSuccess: "Added to cart",
+        addToCartFailed: "Failed to add to cart",
+        addToFavoriteSuccess: "Added to favorites",
+        addToFavoriteFailed: "Failed to add to favorites",
+      },
     },
     user: {
       profile: "Profile",

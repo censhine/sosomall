@@ -9,10 +9,10 @@
         </template>
       </el-image>
       <div v-if="product.isNew" class="product-tag new">
-        {{ $t("product.tags.new") }}
+        {{ t("product.tags.new") }}
       </div>
       <div v-if="product.isHot" class="product-tag hot">
-        {{ $t("product.tags.hot") }}
+        {{ t("product.tags.hot") }}
       </div>
     </div>
     <div class="product-info">
@@ -33,12 +33,12 @@
           score-template="{value}"
         />
         <span class="sales">{{
-          $t("product.sales", { count: product.sales })
+          t("product.sales", { count: product.sales })
         }}</span>
       </div>
       <div class="product-actions">
         <el-button type="primary" @click.stop="handleAddToCart">
-          {{ $t("product.actions.addToCart") }}
+          {{ t("product.actions.addToCart") }}
         </el-button>
         <el-button @click.stop="handleAddToFavorite">
           <el-icon><Star /></el-icon>
@@ -62,7 +62,14 @@ const props = defineProps<{
 const router = useRouter();
 const { t } = useI18n();
 
-const handleClick = () => {
+const handleClick = (event: MouseEvent) => {
+  // 如果点击的是按钮，不进行跳转
+  if (
+    (event.target as HTMLElement).closest(".product-actions") ||
+    (event.target as HTMLElement).closest(".el-button")
+  ) {
+    return;
+  }
   router.push(`/product/${props.product.id}`);
 };
 
