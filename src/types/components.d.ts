@@ -7,6 +7,10 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    AddressSelector: typeof import('./../components/checkout/AddressSelector.vue')['default']
+    CampaignPage: typeof import('./../components/marketing/CampaignPage.vue')['default']
+    CartPreview: typeof import('./../components/CartPreview.vue')['default']
+    CouponSelector: typeof import('./../components/checkout/CouponSelector.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBacktop: typeof import('element-plus/es')['ElBacktop']
     ElBadge: typeof import('element-plus/es')['ElBadge']
@@ -50,10 +54,15 @@ declare module 'vue' {
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     LanguageSwitcher: typeof import('./../components/LanguageSwitcher.vue')['default']
+    PaymentSelector: typeof import('./../components/checkout/PaymentSelector.vue')['default']
     ProductCard: typeof import('./../components/ProductCard.vue')['default']
+    ProductReview: typeof import('./../components/review/ProductReview.vue')['default']
     ProductReviews: typeof import('./../components/ProductReviews.vue')['default']
+    RelatedProducts: typeof import('./../components/RelatedProducts.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SpecialProducts: typeof import('./../components/SpecialProducts.vue')['default']
+    SupportTicket: typeof import('./../components/support/SupportTicket.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
